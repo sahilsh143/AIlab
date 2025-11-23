@@ -1,0 +1,44 @@
+def generate_truth_table():
+    print("P (Switch) | Q (Light) | P -> Q")
+    print("-----------------------------")
+    for P in [True, False]:
+        for Q in [True, False]:
+            implication = (not P) or Q
+            print(f"   {int(P)}     |    {int(Q)}    |   {int(implication)}")
+
+def entails(kb_rule, query):
+    for P in [True, False]:
+        for Q in [True, False]:
+            if kb_rule(P, Q):
+                if not query(P, Q):
+                    return False
+    return True
+
+def kb_rule(P, Q):
+    return (not P) or Q
+
+def query(P, Q):
+    return (not P) or Q
+
+print("Truth Table for P -> Q:")
+generate_truth_table()
+
+print("\nDoes KB entail the query (P -> Q)? ->", entails(kb_rule, query))
+
+def query_2(P, Q):
+    return Q
+
+print("Does KB entail the query (Q)? ->", entails(kb_rule, query_2))
+
+def query_3(P, Q):
+    return P and Q
+
+print("Does KB entail the query (P and Q)? ->", entails(kb_rule, query_3))
+
+example_P = True
+example_Q = True
+
+print(f"\nInput Example: Switch (P) = {example_P}, Light (Q) = {example_Q}")
+print(f"P -> Q: {kb_rule(example_P, example_Q)}")
+print(f"Q: {query_2(example_P, example_Q)}")
+print(f"P and Q: {query_3(example_P, example_Q)}")
