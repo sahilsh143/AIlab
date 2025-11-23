@@ -1,0 +1,51 @@
+def vacuum_world():
+    goal_state = {'A': '0', 'B': '0'}
+    cost = 0
+    location_input = input("Enter Location of Vacuum: ")
+    status_input = input("Enter status of " + location_input + ": ")
+    status_input_complement = input("Enter status of other room: ")
+    print("Initial Location Condition: " + str(goal_state))
+
+    if location_input == 'A':
+        print("Vacuum is placed in Location A")
+        if status_input == '1':
+            print("Location A is Dirty.")
+            goal_state['A'] = '0'
+            cost += 1
+            print("CLEANED A. Cost:", cost)
+        else:
+            print("Location A is already clean.")
+
+        if status_input_complement == '1':
+            print("Location B is Dirty.")
+            cost += 1
+            print("Moved RIGHT. Cost:", cost)
+            goal_state['B'] = '0'
+            cost += 1
+            print("CLEANED B. Cost:", cost)
+        else:
+            print("Location B is already clean.")
+    else:
+        print("Vacuum is placed in Location B")
+        if status_input == '1':
+            print("Location B is Dirty.")
+            goal_state['B'] = '0'
+            cost += 1
+            print("CLEANED B. Cost:", cost)
+        else:
+            print("Location B is already clean.")
+
+        if status_input_complement == '1':
+            print("Location A is Dirty.")
+            cost += 1
+            print("Moved LEFT. Cost:", cost)
+            goal_state['A'] = '0'
+            cost += 1
+            print("CLEANED A. Cost:", cost)
+        else:
+            print("Location A is already clean.")
+
+    print("GOAL STATE:", goal_state)
+    print("Performance Measurement:", cost)
+
+vacuum_world()
