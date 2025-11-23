@@ -1,0 +1,68 @@
+# Resolution-based Propositional Logic Entailment (Wumpus World Example)
+
+def resolve(ci, cj):
+    resolvents = []
+    for li in ci:
+        if ('¬' + li) in cj or ('¬' + li) == cj:
+            new_clause = (ci - {li}) | (cj - {'¬' + li})
+            resolvents.append(new_clause)
+        elif li.startswith('¬') and li[1:] in cj:
+            new_clause = (ci - {li}) | (cj - {li[1:]})
+            resolvents.append(new_clause)
+    return resolvents
+
+
+def resolution_entails(KB, query):
+    clauses = [set(c) for c in KB]
+    neg_query = {'¬' + query} if not query.startswith('¬') else {query[1:]}
+    clauses.append(neg_query)
+
+    print("\nNegated Query Added:", neg_query)
+
+    new = set()
+
+    while True:
+        pairs = [(clauses[i], clauses[j]) for i in range(len(clauses)) 
+                 for j in range(i + 1, len(clauses))]
+
+        for (ci, cj) in pairs:
+            resolvents = resolve(ci, cj)
+
+            for res in resolvents:
+                print(f"Resolving {ci} and {cj} -> {res}")
+
+                if res == set():
+                    print("\nEmpty clause generated → Contradiction found.")
+                    return True
+                new.add(frozenset(res))
+
+        if new.issubset(set(map(frozenset, clauses))):
+            return False
+
+        for clause in new:
+            if clause not in clauses:
+                clauses.append(set(clause))
+
+
+# ---------------------------
+# Sample Wumpus World KB Setup
+# ---------------------------
+
+# Knowledge Base clauses (CNF)
+KB = [
+    {'¬B11', 'P12', 'P21'}, # Breeze rule: B11 → (P12 ∨ P21)
+    {'¬P21'}, # (2,1) safe (no pit)
+    {'B11'}, # Breeze at (1,1)
+    {'S21', '¬W11'}, # ¬S21 → ¬W11 (in CNF: S21 ∨ ¬W11)
+    {'S21', '¬W22'}, # ¬S21 → ¬W22
+    {'¬S21'} # No stench at (2,1)
+]
+
+# Testing Queries
+queries = ["P12", "W22"]
+
+for q in queries:
+    print("\n===============================")
+    print(f"Query: {q}")
+    result = resolution_entails(KB, q)
+    print("Result:", "YES, Entailed" if result else "NO, Not Entailed")
