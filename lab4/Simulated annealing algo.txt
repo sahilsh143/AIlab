@@ -1,0 +1,72 @@
+import random
+import math
+
+def print_board(state):
+    n = len(state)
+    for row in range(n):
+        line = ['.'] * n
+        line[state[row]] = 'Q'
+        print(' '.join(line))
+    print()
+
+def conflicts(state):
+    n = len(state)
+    count = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                count += 1
+    return count
+
+def random_neighbor(state):
+    n = len(state)
+    neighbor = list(state)
+    row = random.randint(0, n - 1)
+    new_col = random.randint(0, n - 1)
+    while new_col == neighbor[row]:
+        new_col = random.randint(0, n - 1)
+    neighbor[row] = new_col
+    return tuple(neighbor)
+
+def simulated_annealing(n=4, initial_temp=100, cooling_rate=0.99, max_iter=1000):
+    current = tuple(random.randint(0, n - 1) for _ in range(n))
+    current_conflicts = conflicts(current)
+    temperature = initial_temp
+
+    for i in range(max_iter):
+        if current_conflicts == 0:
+            return current
+
+        neighbor = random_neighbor(current)
+        neighbor_conflicts = conflicts(neighbor)
+        delta_e = current_conflicts - neighbor_conflicts
+
+        if delta_e > 0:
+            current = neighbor
+            current_conflicts = neighbor_conflicts
+        else:
+            prob = math.exp(delta_e / temperature)
+            if random.random() < prob:
+                current = neighbor
+                current_conflicts = neighbor_conflicts
+
+        temperature *= cooling_rate
+        if temperature < 1e-10:
+            temperature = 1e-10
+
+    return None
+
+def annealing_with_restarts(n=4, restarts=10):
+    for _ in range(restarts):
+        solution = simulated_annealing(n)
+        if solution:
+            return solution
+    return None
+
+# Run with random restarts to ensure a solution is found
+solution = annealing_with_restarts()
+if solution:
+    print("Solution found for 4-Queens using Simulated Annealing with restarts:")
+    print_board(solution)
+else:
+    print("No solution found after multiple restarts.")

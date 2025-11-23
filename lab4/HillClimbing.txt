@@ -1,0 +1,58 @@
+import random
+
+def print_board(state):
+    n = len(state)
+    for row in range(n):
+        line = ['.'] * n
+        line[state[row]] = 'Q'
+        print(' '.join(line))
+    print()
+
+def conflicts(state):
+    n = len(state)
+    count = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            if state[i] == state[j] or abs(state[i] - state[j]) == abs(i - j):
+                count += 1
+    return count
+
+def get_neighbors(state):
+    neighbors = []
+    n = len(state)
+    for row in range(n):
+        for col in range(n):
+            if col != state[row]:
+                new_state = list(state)
+                new_state[row] = col
+                neighbors.append(tuple(new_state))
+    return neighbors
+
+def hill_climbing(n=4, max_iterations=100, max_restarts=50):
+    for restart in range(max_restarts):
+        current = tuple(random.randint(0, n - 1) for _ in range(n))
+        for iteration in range(max_iterations):
+            current_conflicts = conflicts(current)
+            if current_conflicts == 0:
+                return current  # Solution found
+
+            neighbors = get_neighbors(current)
+            neighbor_conflicts = [(conflicts(neighbor), neighbor) for neighbor in neighbors]
+            neighbor_conflicts.sort(key=lambda x: x[0])
+
+            best_conflict, best_neighbor = neighbor_conflicts[0]
+
+            if best_conflict >= current_conflicts:
+                # Local maxima reached, break to restart
+                break
+
+            current = best_neighbor
+    return None  # Failed after all restarts
+
+# Run the random restart hill climbing for 4 queens
+solution = hill_climbing(4)
+if solution:
+    print("Solution found for 4-Queens:")
+    print_board(solution)
+else:
+    print("No solution found after multiple restarts.")
