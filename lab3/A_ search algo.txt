@@ -1,0 +1,63 @@
+import heapq
+
+def is_safe(state, row, col):
+    for r, c in enumerate(state):
+        if c == col or abs(row - r) == abs(col - c):
+            return False
+    return True
+
+def manhattan_distance(state):
+    length = len(state)
+    if length <= 1:
+        return 0
+    min_dist = float('inf')
+    for i in range(length):
+        for j in range(i + 1, length):
+            dist = abs(i - j) + abs(state[i] - state[j])
+            if dist < min_dist:
+                min_dist = dist
+    return min_dist
+
+def heuristic(state, n):
+    remaining = n - len(state)
+    dist = manhattan_distance(state)
+    # Manhattan distance as a negative tie-breaker (prefer states with queens further apart)
+    # but don't prune states with small distances, just prioritize larger distances.
+    return remaining - 0.1 * dist
+
+def a_star_n_queens(n):
+    open_set = []
+    heapq.heappush(open_set, (heuristic((), n), 0, ()))
+
+    while open_set:
+        f, cost, state = heapq.heappop(open_set)
+
+        if len(state) == n:
+            return state
+
+        row = len(state)
+        for col in range(n):
+            if is_safe(state, row, col):
+                new_state = state + (col,)
+                g = cost + 1
+                h = heuristic(new_state, n)
+                heapq.heappush(open_set, (g + h, g, new_state))
+
+    return None
+
+def print_board(state):
+    n = len(state)
+    for row in range(n):
+        line = ['.'] * n
+        line[state[row]] = 'Q'
+        print(' '.join(line))
+    print()
+
+# Example usage:
+n = 8
+solution = a_star_n_queens(n)
+if solution:
+    print(f"Solution for {n}-Queens using A* with Manhattan distance heuristic:")
+    print_board(solution)
+else:
+    print("No solution found.")
