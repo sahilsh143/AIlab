@@ -1,0 +1,94 @@
+# -----------------------------
+# FOL Forward Chaining Compressed
+# -----------------------------
+from copy import deepcopy
+
+# Predicate class
+class Predicate:
+    def __init__(self, name, args): self.name, self.args = name, args
+    def __repr__(self): return f"{self.name}({', '.join(self.args)})"
+    def __eq__(self, o): return self.name==o.name and self.args==o.args
+    def __hash__(self): return hash((self.name, tuple(self.args)))
+
+# Unification
+def is_var(x): return x[0].islower() if isinstance(x,str) else False
+def unify(x, y, theta=None):
+    if theta is None: theta = {}
+    if x==y: return theta
+    if is_var(x): return unify_var(x, y, theta)
+    if is_var(y): return unify_var(y, x, theta)
+    if isinstance(x, Predicate) and isinstance(y, Predicate):
+        if x.name!=y.name or len(x.args)!=len(y.args): return None
+        for a,b in zip(x.args, y.args):
+            theta = unify(a,b,theta)
+            if theta is None: return None
+        return theta
+    return None
+def unify_var(v,x,theta):
+    if v in theta: return unify(theta[v],x,theta)
+    if is_var(x) and x in theta: return unify(v,theta[x],theta)
+    theta[v]=x; return theta
+def subst(pred,theta): return Predicate(pred.name,[theta.get(a,a) for a in pred.args])
+
+# Forward chaining
+def forward_chain(KB_facts, KB_rules, query):
+    KB = set(KB_facts)
+    new_facts = set()
+    added = True
+    while added:
+        added = False
+        for premises, conclusion in KB_rules:
+            for theta in match_premises(premises, KB):
+                inferred = subst(conclusion, theta)
+                if inferred not in KB and inferred not in new_facts:
+                    print(f"Inferred: {inferred} using θ={theta}")
+                    new_facts.add(inferred)
+                    added = True
+                    theta_query = unify(inferred, query)
+                    if theta_query is not None:
+                        print(f"Query {query} proved with θ={theta_query}!")
+                        return True
+        KB.update(new_facts)
+        new_facts.clear()
+    return False
+
+
+def match_premises(premises, KB):
+    if not premises: return [{}]
+    first, rest = premises[0], premises[1:]; results=[]
+    for fact in KB:
+        theta=unify(first,fact)
+        if theta is not None:
+            for sub_theta in match_premises([subst(p,theta) for p in rest], KB):
+                merged={**theta,**sub_theta}; results.append(merged)
+    return results
+
+# -----------------------------
+# Knowledge Base
+# -----------------------------
+KB_facts=[
+    Predicate("American", ["Robert"]),
+    Predicate("Enemy", ["A","America"]),
+    Predicate("Owns", ["A","T1"]),
+    Predicate("Missile", ["T1"])
+]
+
+KB_rules=[
+    ([Predicate("American", ["p"]), Predicate("Weapon", ["q"]), Predicate("Sells", ["p","q","r"]), Predicate("Hostile", ["r"])],
+     Predicate("Criminal", ["p"])),
+
+    ([Predicate("Missile", ["x"]), Predicate("Owns", ["A","x"])],
+     Predicate("Sells", ["Robert","x","A"])),
+
+    ([Predicate("Missile", ["x"])],
+     Predicate("Weapon", ["x"])),
+
+    ([Predicate("Enemy", ["x","America"])],
+     Predicate("Hostile", ["x"]))
+]
+
+query = Predicate("Criminal", ["Robert"])
+
+# Run Forward Chaining
+result = forward_chain(KB_facts, KB_rules, query)
+print("\nResult:", "Proved" if result else "Not proved")

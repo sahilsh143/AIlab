@@ -1,0 +1,41 @@
+def is_variable(x):
+    return x[0].islower() and x.isalpha()
+
+def get_args(expr):
+    name, args = expr.split('(')
+    args = args[:-1]  # remove ')'
+    return name.strip(), [a.strip() for a in args.split(',')]
+
+def unify(expr1, expr2):
+    name1, args1 = get_args(expr1)
+    name2, args2 = get_args(expr2)
+
+    print(f"\nExpression 1: {expr1}")
+    print(f"Expression 2: {expr2}")
+
+    # Predicate names or argument counts must match
+    if name1 != name2 or len(args1) != len(args2):
+        print("Unification failed: predicate mismatch")
+        return None
+
+    substitution = {}
+
+    for a1, a2 in zip(args1, args2):
+        if a1 == a2:
+            continue
+        elif is_variable(a1):
+            substitution[a1] = a2
+        elif is_variable(a2):
+            substitution[a2] = a1
+        else:
+            print(f"Unification failed for {a1} and {a2}")
+            return None
+
+    print("\nUnification Successful!")
+    print("Substitution:", substitution)
+    return substitution
+
+expr1 = input("Enter first expression (e.g., Eats(x, Apple)): ")
+expr2 = input("Enter second expression (e.g., Eats(Riya, y)): ")
+
+unify(expr1, expr2)
